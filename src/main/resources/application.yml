@@ -1,0 +1,19 @@
+# TODO url 및 username password 설정하세요.
+# TODO ddl-auto가 create인 점 확인바랍니다.
+spring:
+  datasource:
+    url:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password:
+  h2:
+    console:
+      enabled: true
+
+  jpa:
+    open-in-view: false
+    generate-ddl: true
+
+    hibernate:
+      ddl-auto: create
+      format_sql: true
