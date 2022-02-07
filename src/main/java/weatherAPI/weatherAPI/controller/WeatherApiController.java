@@ -17,6 +17,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,6 +34,7 @@ public class WeatherApiController {
         "REH", "SNO", "SKY", "TMP", "TMN", "TMX");
 
     @GetMapping("/weather")
+    @Scheduled(cron = "0 0 0/3 * * *")
     public void getVillageWeather() throws IOException, ParseException {
         DateFormat sdFormat = new SimpleDateFormat("yyyyMMdd");
         Date nowDate = new Date();
