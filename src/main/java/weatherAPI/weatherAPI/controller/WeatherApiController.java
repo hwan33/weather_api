@@ -5,12 +5,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;
@@ -34,58 +33,35 @@ public class WeatherApiController {
         "REH", "SNO", "SKY", "TMP", "TMN", "TMX");
 
     @GetMapping("/weather")
-    @Scheduled(cron = "0 0 0/3 * * *")
+    @Scheduled(cron = "0 0 2/3 * * *", zone = "Asia/Seoul")
     public void getVillageWeather() throws IOException, ParseException {
-        DateFormat sdFormat = new SimpleDateFormat("yyyyMMdd");
-        Date nowDate = new Date();
-        String tempDate = sdFormat.format(nowDate);
 
         String apiUrl = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
-
-        // TODO 인터넷에서 할당 받은 인증키를 사용해주세요
-        String serviceKey = "인터넷에서 할당 받은 인증키를 사용해주세요";
+        // TODO 인터넷에서 발급받은 인증키를 사용해주세요
+        String serviceKey = "인터넷에서 발급받은 인증키를 사용해주세요";
         String pageNo = "1";
-        String numOfRows = "225";
+        String baseDate = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+        String baseTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmm"));
+        String numOfRows = "1000";
         String dataType = "JSON";
-        String base_time = "0500";
         String nx = "60";
         String ny = "120";
 
-        String urlBuilder =
-            apiUrl + "?" + URLEncoder.encode("serviceKey", "UTF-8") + "=" + serviceKey
-                + "&" + URLEncoder.encode("numOfRows", "UTF-8") + "=" + URLEncoder.encode(numOfRows,
-                "UTF-8")
-                + "&" + URLEncoder.encode("pageNo", "utf-8") + "=" + URLEncoder.encode(pageNo,
-                "utf-8")
-                + "&" + URLEncoder.encode("base_date", "utf-8") + "=" + URLEncoder.encode(tempDate,
-                "utf-8")
-                + "&" + URLEncoder.encode("base_time", "utf-8") + "=" + URLEncoder.encode(base_time,
-                "utf-8")
-                + "&" + URLEncoder.encode("nx", "utf-8") + "=" + URLEncoder.encode(nx, "utf-8")
-                + "&" + URLEncoder.encode("ny", "utf-8") + "="
-                + URLEncoder.encode(ny, "utf-8")
-                + "&" + URLEncoder.encode("dataType", "utf-8") + "=" + URLEncoder.encode(dataType,
-                "utf-8");
+        String url = apiUrl
+            + "?serviceKey=" + serviceKey
+            + "&numOfRows=" + numOfRows
+            + "&pageNo=" + pageNo
+            + "&base_date=" + baseDate
+            + "&base_time=" + baseTime
+            + "&nx=" + nx
+            + "&ny=" + ny
+            + "&dataType=" + dataType;
 
-        String result = getDataFromJson(urlBuilder, "UTF-8", "get", "");
+        String result = getStringFromURL(url);
         weatherService.upload(getWeatherList(result));
     }
 
-    public String getDataFromJson(String url, String encoding, String type, String jsonStr)
-        throws IOException {
-        boolean isPost = false;
-
-        if ("post".equals(type)) {
-            isPost = true;
-        } else {
-            url = "".equals(jsonStr) ? url : url + "?request=" + jsonStr;
-        }
-
-        return getStringFromURL(url, encoding, isPost, jsonStr, "application/json");
-    }
-
-    public String getStringFromURL(String url, String encoding, boolean isPost, String parameter,
-        String contentType) throws IOException {
+    public String getStringFromURL(String url) throws IOException {
         URL apiURL = new URL(url);
 
         HttpURLConnection conn = (HttpURLConnection) apiURL.openConnection();
@@ -133,7 +109,9 @@ public class WeatherApiController {
             String nx = String.valueOf(obj.get("nx"));
             String ny = String.valueOf(obj.get("ny"));
 
-            dataList.add(Weather.create(baseDate, baseTime, category, fcstDate, fcstTime, fcstValue, nx, ny));
+            dataList.add(
+                Weather.create(baseDate, baseTime, category, fcstDate, fcstTime, fcstValue, nx,
+                    ny));
         }
         return dataList;
     }
